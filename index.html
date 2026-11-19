@@ -41,7 +41,8 @@ kbd{background:#2c2d45;border:1px solid var(--line);border-radius:6px;padding:1p
 #tut{position:fixed;top:calc(74px + env(safe-area-inset-top));left:50%;transform:translateX(-50%);width:min(460px,calc(100vw - 32px));background:rgba(14,18,36,.9);border:2px solid #3d9bff;border-radius:14px;padding:10px 14px 8px;text-align:center;display:none;z-index:6;box-shadow:0 8px 30px rgba(0,0,0,.4)}
 #tutStep{color:#3d9bff;font-size:11px;font-weight:800;letter-spacing:2px}#tutText{font-size:16px;font-weight:700;margin:4px 0 6px;line-height:1.3}
 #tutSkip{background:none;border:0;color:#a9a6c9;font:inherit;font-size:12px;text-decoration:underline;cursor:pointer;padding:2px 6px}
-@media (max-width:479px){#tut{top:calc(124px + env(safe-area-inset-top))}#tutText{font-size:14px}}
+@media (max-width:479px){#tut{top:calc(206px + env(safe-area-inset-top))}#tutText{font-size:14px}}
+@media (max-height:500px) and (orientation:landscape){#tut{top:auto;bottom:calc(10px + env(safe-area-inset-bottom));width:min(400px,calc(100vw - 520px));min-width:260px;padding:6px 10px 4px}#tutStep{font-size:9px}#tutText{font-size:13px;margin:2px 0 3px}#tutSkip{font-size:11px}}
 #exitBtn{position:fixed;right:calc(22px + env(safe-area-inset-right));bottom:calc(118px + env(safe-area-inset-bottom));width:72px;height:72px;border-radius:50%;border:2px solid rgba(255,255,255,.3);background:rgba(255,61,127,.8);color:#fff;font:800 13px "Trebuchet MS",sans-serif;display:none;z-index:5;touch-action:none;-webkit-touch-callout:none}
 .tb{position:fixed;bottom:calc(18px + env(safe-area-inset-bottom));width:88px;height:88px;border-radius:50%;background:rgba(20,21,34,.55);border:2px solid rgba(255,255,255,.28);color:#fff;font:900 30px "Trebuchet MS",sans-serif;display:none;z-index:5;touch-action:none;-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent;padding:0}
 .tb small{display:block;font-size:10px;letter-spacing:1px;margin-top:-2px}
@@ -80,7 +81,8 @@ button{-webkit-tap-highlight-color:transparent}
 <div id="pause" class="screen"><div class="panel">
   <h2>Paused</h2>
   <p class="sub">Catch your breath. The cops won't.</p>
-  <button class="btn" id="resBtn">Resume</button><button class="btn alt" id="quitBtn">Quit run</button>
+  <button class="btn" id="resBtn">Resume</button><button class="btn alt" id="songBtn">♪ Next song</button><button class="btn alt" id="quitBtn">Quit run</button>
+  <p class="sub" id="songNow" style="margin-top:10px"></p>
 </div></div>
 
 <div id="over" class="screen"><div class="panel">
@@ -527,6 +529,7 @@ function musicStep(t){const P=MUS.pat,s=MUS.step%16,bar=MUS.bar,sec=bar%16,brk=s
 function musicTick(){if(!AC||!MUS.pat)return;if(MUS.next<AC.currentTime-.2)MUS.next=AC.currentTime+.05;
  while(MUS.next<AC.currentTime+.12){try{musicStep(MUS.next);}catch(e){}MUS.next+=MUS.pat.sd;MUS.step++;if(MUS.step%16===0){MUS.bar++;if(MUS.bar>=64){loadSong(MUS.song+1);save.song=MUS.song;}}}
  MUS.g.gain.setTargetAtTime(state==='pause'?.12:.3,AC.currentTime,.2);}
+function showSongNow(){const e=$('songNow');if(e)e.textContent=MUS.g?'Now playing: '+SONGS[MUS.song][0]:'';}
 function nextSong(){if(!MUS.g)return;save.song=(MUS.song+1)%SONGS.length;playSong(save.song);}
 
 // ---------- opening script, combos, tutorial ----------
@@ -811,7 +814,7 @@ function render(){NIGHT=.5+.5*Math.cos(2*Math.PI*(G?G.t:0)/120);DM=Math.round((1
  if(!G||G.rain){ctx.strokeStyle='rgba(170,195,255,.25)';ctx.lineWidth=1;ctx.beginPath();for(const d of drops){d.y+=rdt*1.5*d.s;d.x+=rdt*.22*d.s;if(d.y>1){d.y-=1;d.x=Math.random();}if(d.x>1)d.x-=1;const x=d.x*W,y=d.y*H;ctx.moveTo(x,y);ctx.lineTo(x-3.5*d.s,y-15*d.s);}ctx.stroke();}
  if(G&&state==='play'&&G.player){const f=clamp((Math.abs(G.player.fwd)/G.player.spec.maxSpeed-.82)/.18,0,1)+(G.slow>0?.6:0);if(f>0){ctx.strokeStyle='rgba(230,240,255,'+(.22*Math.min(1,f)).toFixed(3)+')';ctx.lineWidth=2;ctx.beginPath();for(let i=0;i<26;i++){const a=Math.random()*6.28,r0=Math.max(W,H)*.42+Math.random()*80,r1=r0+60+Math.random()*120;ctx.moveTo(W/2+Math.cos(a)*r0,H/2+Math.sin(a)*r0);ctx.lineTo(W/2+Math.cos(a)*r1,H/2+Math.sin(a)*r1);}ctx.stroke();}}
  if(G&&G.flash>0){ctx.fillStyle='rgba(255,255,255,'+(G.flash*.7).toFixed(3)+')';ctx.fillRect(0,0,W,H);}
- if(MUS.toast>0&&MUS.pat){MUS.toast-=rdt;ctx.globalAlpha=Math.min(1,MUS.toast);ctx.font='bold 13px "Trebuchet MS",sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';const ty=H-(isTouch?120:22);ctx.fillStyle='#000';ctx.fillText('♪ '+MUS.pat.name,W/2+1,ty+1);ctx.fillStyle='#cfe6ff';ctx.fillText('♪ '+MUS.pat.name,W/2,ty);ctx.globalAlpha=1;}
+ if(MUS.toast>0&&MUS.pat){MUS.toast-=rdt;ctx.globalAlpha=Math.min(1,MUS.toast);ctx.font='bold 13px "Trebuchet MS",sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';const ty=H-(isTouch?(W>H?28:150):22);ctx.fillStyle='#000';ctx.fillText('♪ '+MUS.pat.name,W/2+1,ty+1);ctx.fillStyle='#cfe6ff';ctx.fillText('♪ '+MUS.pat.name,W/2,ty);ctx.globalAlpha=1;}
  if(G&&(state==='play'||state==='pause'||state==='over'))hud();}
 function hud(){const sm=W<600;ctx.textBaseline='top';ctx.textAlign='left';
  ctx.fillStyle='rgba(20,21,34,.7)';rr(12,12,sm?150:200,sm?62:72,12);ctx.fill();
@@ -848,7 +851,7 @@ function hud(){const sm=W<600;ctx.textBaseline='top';ctx.textAlign='left';
 function showScreen(id){for(const s of ['menu','garage','pause','over'])$(s).classList.toggle('on',s===id);
  if(id==='menu'){$('mBest').textContent=save.best;$('mBank').textContent=save.bank;}if(id==='garage')buildGarage();}
 const pauseBtn=$('pauseBtn');pauseBtn.addEventListener('click',e=>{e.preventDefault();if(state==='play')togglePause();});pauseBtn.addEventListener('touchstart',e=>{e.preventDefault();e.stopPropagation();if(state==='play')togglePause();},{passive:false});
-function togglePause(){if(state==='play'){CG.stop();state='pause';showScreen('pause');if(sirenG)sirenG.gain.value=0,engG.gain.value=0;}else if(state==='pause'){state='play';showScreen(null);CG.start();}}
+function togglePause(){if(state==='play'){CG.stop();state='pause';showScreen('pause');showSongNow();$('tut').style.display='none';if(sirenG)sirenG.gain.value=0,engG.gain.value=0;}else if(state==='pause'){state='play';showScreen(null);if(G&&G.tut>=0)tutShow();CG.start();}}
 $('dblBtn').onclick=()=>{const db=$('dblBtn');if(adBusy||db.disabled)return;adBusy=true;db.disabled=true;db.textContent='Loading ad...';
  CG.ad('rewarded',ok=>{adBusy=false;if(ok){db.style.display='none';return;}db.textContent='No ad available right now';db.style.opacity=.6;setTimeout(()=>{db.style.display='none';},2200);},
   ()=>{save.bank+=lastEarned;persist();$('oCash').textContent='+$'+(lastEarned*2);});};
@@ -864,7 +867,7 @@ function buildGarage(){$('gBank').textContent=save.bank;const el=$('cars');el.in
 $('playBtn').onclick=startRun;$('howBtn').onclick=()=>{save.tut=0;startRun();};$('tutSkip').onclick=()=>tutEnd();$('againBtn').onclick=startRun;
 $('garBtn').onclick=()=>{state='garage';showScreen('garage');};$('oGar').onclick=()=>{state='garage';showScreen('garage');};
 $('gBack').onclick=()=>{state='menu';showScreen('menu');};$('oMenu').onclick=()=>{state='menu';showScreen('menu');};
-$('resBtn').onclick=togglePause;$('quitBtn').onclick=()=>{G.over=false;state='play';gameOver('Gave up','You turned yourself in.');};
+$('resBtn').onclick=togglePause;$('songBtn').onclick=()=>{nextSong();showSongNow();};$('quitBtn').onclick=()=>{G.over=false;state='play';gameOver('Gave up','You turned yourself in.');};
 showScreen('menu');
 
 // ---------- loop ----------
